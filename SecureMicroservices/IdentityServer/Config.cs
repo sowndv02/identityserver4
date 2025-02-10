@@ -20,7 +20,7 @@ namespace IdentityServer
                         new Secret("secret".Sha256())
                     }, 
                     AllowedScopes ={ "movieAPI" }
-                }
+                },
                 new Client
                 {
                     ClientId = "movies_mvc_client",
