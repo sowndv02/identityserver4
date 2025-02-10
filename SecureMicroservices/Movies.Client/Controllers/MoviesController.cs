@@ -20,6 +20,12 @@ namespace Movies.Client.Controllers
             _movieService = movieService;
         }
 
+        public async Task<IActionResult> OnlyAdmin()
+        {
+            var userInfo = await _movieService.GetUserInfo();
+            return View(userInfo);
+        }
+
         public async Task LogTokenAndClaims()
         {
             var identityToken = await HttpContext.GetTokenAsync(OpenIdConnectParameterNames.IdToken);

@@ -1,4 +1,6 @@
 ﻿using IdentityModel.Client;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Movies.Client.Models;
 using Newtonsoft.Json;
 
@@ -7,25 +9,38 @@ namespace Movies.Client.ApiServices
     public class MovieService : IMovieService
     {
         private readonly IHttpClientFactory _httpClientFactory;
-        public MovieService(IHttpClientFactory httpClientFactory)
+        private readonly IHttpContextAccessor _contextAccessor;
+        public MovieService(IHttpClientFactory httpClientFactory, IHttpContextAccessor contextAccessor)
         {
             _httpClientFactory = httpClientFactory;
+            _contextAccessor = contextAccessor;
         }
-        public Task<Movie> CreateMovie(Movie movie)
+        
+        public async Task<UserInfoViewModel> GetUserInfo()
         {
-            throw new NotImplementedException();
-        }
+            var idpClient = _httpClientFactory.CreateClient("IDPClient");
+            var metaDataResponse = await idpClient.GetDiscoveryDocumentAsync();
+            if (metaDataResponse.IsError) throw new HttpRequestException("Something went wrong while requesting the access token");
 
-        public Task DeleteMovie(string id)
-        {
-            throw new NotImplementedException();
-        }
+            var accessToken = await _contextAccessor.HttpContext.GetTokenAsync(OpenIdConnectParameterNames.AccessToken);
 
-        public Task<Movie> GetMovie(string id)
-        {
-            throw new NotImplementedException();
-        }
+            var userInfoResponse = await idpClient.GetUserInfoAsync(
+                new UserInfoRequest
+                {
+                    Address = metaDataResponse.UserInfoEndpoint,
+                    Token = accessToken,
+                });
+            if(userInfoResponse.IsError) throw new HttpRequestException("Something went wrong while getting user info");
 
+            var userInfoDictionary = new Dictionary<string, string>();
+
+            foreach (var claim in userInfoResponse.Claims) 
+            {
+                userInfoDictionary.Add(claim.Type, claim.Value);
+            }
+
+            return new UserInfoViewModel(userInfoDictionary);
+        }
         public async Task<IEnumerable<Movie>> GetMovies()
         {
             //WAY1
@@ -102,6 +117,21 @@ namespace Movies.Client.ApiServices
             //    Owner = "swn"
             //});
             //return await Task.FromResult(movieList);
+        }
+
+        public Task<Movie> CreateMovie(Movie movie)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task DeleteMovie(string id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Movie> GetMovie(string id)
+        {
+            throw new NotImplementedException();
         }
 
         public Task<Movie> UpdateMovie(Movie movie)
