@@ -1,4 +1,5 @@
-﻿
+﻿@using Movies.Client.Models;
+
 @{
     ViewData["Title"] = "OnlyAdmin";
 }
@@ -16,10 +17,10 @@
         {
             <tr>
                 <td>
-                    @Html.DisplayFor(modelItem => item.Key)
+                    @item.Key
                 </td>
                 <td>
-                    @Html.DisplayFor(modelItem => item.Value)
+                    @item.Value
                 </td>
             </tr>
         }
